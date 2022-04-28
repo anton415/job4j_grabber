@@ -1,7 +1,7 @@
 # codecov
 env:
   global:
-    - CODECOV_TOKEN="26f4d543-02c8-4cb0-adad-a68466a67617"
+    - CODECOV_TOKEN='26f4d543-02c8-4cb0-adad-a68466a67617'
 
 # используем язык java. Travis CI поддерживает другие языки тоже.
 language: java
