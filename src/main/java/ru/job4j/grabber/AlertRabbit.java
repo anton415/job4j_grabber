@@ -17,16 +17,15 @@ import static org.quartz.SimpleScheduleBuilder.*;
 public class AlertRabbit {
     private static final Logger LOG = LoggerFactory.getLogger(AlertRabbit.class.getName());
     private static Properties properties;
-    private static Connection connection;
 
     public static void main(String[] args) {
         initProperties();
-        initConnection();
         try {
             Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
             scheduler.start();
             JobDataMap data = new JobDataMap();
-            data.put("connection", connection);
+            Class.forName(properties.getProperty("driver-class-name"));
+            data.put("connection", getConnection());
             JobDetail job = newJob(Rabbit.class)
                     .usingJobData(data)
                     .build();
@@ -42,7 +41,7 @@ public class AlertRabbit {
             int sleepInterval = Integer.parseInt(properties.getProperty("sleep.interval"));
             Thread.sleep(sleepInterval);
             scheduler.shutdown();
-        } catch (SchedulerException | InterruptedException exception) {
+        } catch (SchedulerException | InterruptedException | ClassNotFoundException | SQLException exception) {
             LOG.error(exception.getMessage());
         }
     }
@@ -56,7 +55,9 @@ public class AlertRabbit {
         public void execute(JobExecutionContext context) {
             LOG.info("Rabbit runs here ...");
             Connection connection = (Connection) context.getJobDetail().getJobDataMap().get("connection");
-            try (PreparedStatement prepareStatement = connection.prepareStatement("insert into rabbit (created_date) values (current_timestamp)")) {
+            try (PreparedStatement prepareStatement = connection.prepareStatement(
+                    "insert into rabbit (created_date) values (current_timestamp)")
+            ) {
                 prepareStatement.execute();
             } catch (SQLException exception) {
                 LOG.error(exception.getMessage());
@@ -73,16 +74,12 @@ public class AlertRabbit {
         }
     }
 
-    public static void initConnection() {
-        try {
-            Class.forName(properties.getProperty("driver-class-name"));
-            connection = DriverManager.getConnection(
-                    properties.getProperty("url"),
-                    properties.getProperty("username"),
-                    properties.getProperty("password")
-            );
-        } catch (ClassNotFoundException | SQLException exception) {
-            LOG.error(exception.getMessage());
+    public static Connection getConnection() throws SQLException {
+        try (Connection connection = DriverManager.getConnection(
+                properties.getProperty("url"),
+                properties.getProperty("username"),
+                properties.getProperty("password"))) {
+            return connection;
         }
     }
 }
