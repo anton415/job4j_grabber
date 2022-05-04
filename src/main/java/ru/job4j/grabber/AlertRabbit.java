@@ -25,22 +25,24 @@ public class AlertRabbit {
             scheduler.start();
             JobDataMap data = new JobDataMap();
             Class.forName(properties.getProperty("driver-class-name"));
-            data.put("connection", getConnection());
-            JobDetail job = newJob(Rabbit.class)
-                    .usingJobData(data)
-                    .build();
-            int rabbitScheduleInterval = Integer.parseInt(properties.getProperty("schedule.interval"));
-            SimpleScheduleBuilder times = simpleSchedule()
-                    .withIntervalInSeconds(rabbitScheduleInterval)
-                    .repeatForever();
-            Trigger trigger = newTrigger()
-                    .startNow()
-                    .withSchedule(times)
-                    .build();
-            scheduler.scheduleJob(job, trigger);
-            int sleepInterval = Integer.parseInt(properties.getProperty("sleep.interval"));
-            Thread.sleep(sleepInterval);
-            scheduler.shutdown();
+            try (Connection connection = getConnection()) {
+                data.put("connection", connection);
+                JobDetail job = newJob(Rabbit.class)
+                        .usingJobData(data)
+                        .build();
+                int rabbitScheduleInterval = Integer.parseInt(properties.getProperty("schedule.interval"));
+                SimpleScheduleBuilder times = simpleSchedule()
+                        .withIntervalInSeconds(rabbitScheduleInterval)
+                        .repeatForever();
+                Trigger trigger = newTrigger()
+                        .startNow()
+                        .withSchedule(times)
+                        .build();
+                scheduler.scheduleJob(job, trigger);
+                int sleepInterval = Integer.parseInt(properties.getProperty("sleep.interval"));
+                Thread.sleep(sleepInterval);
+                scheduler.shutdown();
+            }
         } catch (SchedulerException | InterruptedException | ClassNotFoundException | SQLException exception) {
             LOG.error(exception.getMessage());
         }
@@ -75,11 +77,10 @@ public class AlertRabbit {
     }
 
     public static Connection getConnection() throws SQLException {
-        try (Connection connection = DriverManager.getConnection(
+        return DriverManager.getConnection(
                 properties.getProperty("url"),
                 properties.getProperty("username"),
-                properties.getProperty("password"))) {
-            return connection;
-        }
+                properties.getProperty("password"));
+
     }
 }
