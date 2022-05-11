@@ -23,11 +23,9 @@ public class HabrCareerParse implements Parse {
 
     public static void main(String[] args) {
         Parse habrCareerParse = new HabrCareerParse(new HarbCareerDateTimeParser());
-        for (int i = 1; i <= 5; i++) {
-            String pageLink = String.format("%s/vacancies/java_developer?page=%s", SOURCE_LINK, i);
-            List<Post> posts = new LinkedList<>(habrCareerParse.list(pageLink));
-            posts.forEach(post -> System.out.println(post.getTitle()));
-        }
+        String pageLink = String.format("%s/vacancies/java_developer?page=", SOURCE_LINK);
+        List<Post> posts = new LinkedList<>(habrCareerParse.list(pageLink));
+        posts.forEach(post -> System.out.println(post.getTitle()));
     }
 
     private String retrieveDescription(String link) {
@@ -46,13 +44,15 @@ public class HabrCareerParse implements Parse {
     @Override
     public List<Post> list(String link) {
         List<Post> posts = new LinkedList<>();
-        Connection connection = Jsoup.connect(link);
-        try {
-            Document document = connection.get();
-            Elements rows = document.select(".vacancy-card__inner");
-            rows.forEach(row -> posts.add(getPost(row)));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        for (int i = 1; i <= 5; i++) {
+            Connection connection = Jsoup.connect(link + i);
+            try {
+                Document document = connection.get();
+                Elements rows = document.select(".vacancy-card__inner");
+                rows.forEach(row -> posts.add(getPost(row)));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         return posts;
     }
