@@ -60,7 +60,6 @@ public class Grabber implements Grab {
             JobDataMap map = context.getJobDetail().getJobDataMap();
             Store store = (Store) map.get("store");
             Parse parse = (Parse) map.get("parse");
-            /* TODO impl logic */
             String link = String.valueOf(map.get("link"));
             List<Post> posts = new ArrayList<>(parse.list(link));
             posts.forEach(store::save);
