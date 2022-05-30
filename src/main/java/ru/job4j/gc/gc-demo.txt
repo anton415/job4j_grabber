@@ -4,16 +4,91 @@
 - Память для ссылочных типов = 2 байта * на длину строки
 - Смещение/выравнивание = 4 байта
 
-Максимальный размер кучи = -Xmx6m -Xms3m
-Вызов сборщика мусора при 3000 объектов User.
+По расчетам:
+1) User {} без полей
+24 байта
 
+2) User {int id. String name} (здесь String ссылается на null)
+24 байта
+
+3) User user = new  User(100, "Ivan") а вот здесь нужно посчитать сколько занимает в памяти еще и String
+46 байт
+
+4) Мои наблюдения - куда начали попадать объекты, почему вызвался gc и тп
+Добиться состояния, когда виртуальная машины вызывает сборщик мусора самостоятельно. За счет ключей xmx.
+Без ключей, 10000 объектов:
+=== Environment state ===
+Free: 267
+Total: 272
+Max: 4294
+=== Environment state ===
+Free: 31
+Total: 35
+Max: 4294
+Removed 6674 N6674
+Removed 7960 N7960
+Removed 8322 N8322
+Removed 5544 N5544
+Removed 6211 N6211
+Removed 6582 N6582
+Removed 8420 N8420
+Removed 9197 N9197
+Removed 2437 N2437
+Removed 3188 N3188
+
+Без ключей, 10 объектов:
+=== Environment state ===
+Free: 267
+Total: 272
+Max: 4294
+=== Environment state ===
+Free: 26
+Total: 29
+Max: 4294
+Removed 1 N1
+
+С ключами -Xmx6m -Xms3m, 10000 объектов:
+=== Environment state ===
+Free: 4
+Total: 6
+Max: 6
+Removed 4021 N4021
+Removed 4600 N4600
+Removed 4960 N4960
+Removed 5554 N5554
+Removed 6591 N6591
+Removed 3240 N3240
+Removed 8108 N8108
+Removed 8776 N8776
+Removed 9381 N9381
+Removed 9979 N9979
+Removed 9999 N9999
+Removed 9998 N9998
+Removed 9997 N9997
+Removed 9996 N9996
+Removed 9995 N9995
+Removed 9994 N9994
+=== Environment state ===
+Removed 9993 N9993
+Free: 3
+Total: 6
+Max: 6
+Removed 9992 N9992
+Removed 9991 N9991
+
+С ключами -Xmx6m -Xms3m, 10 объектов:
 === Environment state ===
 Free: 4
 Total: 6
 Max: 6
 === Environment state ===
-Free: 3
+Free: 4
 Total: 6
 Max: 6
-Removed 11 N11
-Removed 1143
+Removed 9 N9
+Removed 8 N8
+
+Объяснить поведение программы в текстовом файле:
+Без ключей вызов сборщика мусора не происходит, потому что памяти много.
+С ключами -Xmx6m -Xms3m вызов сборщика мусора происходит, но только при достаточно большом
+количестве объектов, в моем случа 10 000 объектов.
