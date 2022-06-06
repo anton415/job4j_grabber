@@ -7,7 +7,6 @@ import java.util.List;
 public class SoftDemo {
 
     public static void main(String[] args) {
-        //example1();
         example2();
     }
 
